@@ -1,0 +1,5 @@
+.terraform
+.terraform*
+*.txt
+*.zip
+*.tfstate*
