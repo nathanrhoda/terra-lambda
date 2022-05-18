@@ -116,3 +116,31 @@ resource "aws_lambda_function" "who_node_lambda" {
     }
   }
 }
+
+data "archive_file" "temp_queue_lambda_zip" {
+  type        = "zip"
+  source_file = "lambdas/temp_queue_lambda.js"
+  output_path = "lambdas/temp_queue_lambda.zip"
+}
+
+resource "aws_lambda_function" "temp_queue_lambda" {
+  function_name = "temp_queue_lambda"
+
+  filename         = "${data.archive_file.temp_queue_lambda_zip.output_path}"
+  source_code_hash = "${data.archive_file.temp_queue_lambda_zip.output_base64sha256}"
+
+  role    = "${aws_iam_role.iam_for_lambda.arn}"
+  handler = "temp_queue_lambda.handler"
+  runtime = "nodejs14.x"
+
+  environment {
+    variables = {
+      greeting = "TempQueue"
+    }
+  }
+}
+resource "aws_sqs_queue" "terraform_queue" {
+  name                        = "main-queue.fifo"
+  fifo_queue                  = true
+  content_based_deduplication = true
+}
